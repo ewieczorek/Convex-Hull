@@ -1,6 +1,13 @@
 package edu.iastate.cs228.hw4;
 
+/**
+ *  
+ * @author Ethan Wieczorek
+ *
+ */
+
 import java.io.FileNotFoundException;
+import java.util.Comparator;
 import java.util.InputMismatchException;
 import java.util.ArrayList; 
 
@@ -24,7 +31,8 @@ public class GrahamScan extends ConvexHull
 	public GrahamScan(Point[] pts) throws IllegalArgumentException 
 	{
 		super(pts); 
-		// TODO 
+		algorithm = "Graham's Scan";
+		vertexStack = new ArrayBasedStack<Point>();
 	}
 	
 
@@ -38,7 +46,8 @@ public class GrahamScan extends ConvexHull
 	public GrahamScan(String inputFileName) throws FileNotFoundException, InputMismatchException
 	{
 		super(inputFileName); 
-		// TODO 
+		super.algorithm = "Graham's Scan";
+		vertexStack = new ArrayBasedStack<Point>();
 	}
 
 	
@@ -69,7 +78,49 @@ public class GrahamScan extends ConvexHull
 	 */
 	public void constructHull()
 	{
-		// TODO
+		Comparator<Point> comp =  new PolarAngleComparator(lowestPoint, true);
+		setUpScan();
+		long starttime = 0;
+		long stoptime = 0;
+		starttime = System.nanoTime();
+		if(pointsNoDuplicate.length == 1){
+			hullVertices = new Point[1];
+			hullVertices[0] = new Point(pointsNoDuplicate[0]);
+		}else if(pointsNoDuplicate.length == 2){
+			hullVertices = new Point[2];
+			hullVertices[0] = new Point(pointsNoDuplicate[0]);
+			hullVertices[1] = new Point(pointsNoDuplicate[1]);
+		}else{
+			Point tempfirstpoint = new Point(pointsNoDuplicate[1]);
+			vertexStack.push(pointsNoDuplicate[0]); // the first point is the lowest point and also the first point of the convex hull 
+			vertexStack.push(pointsNoDuplicate[1]); //the second point is the point with the smallest polar angle so it is the second point in the convex hull
+			vertexStack.push(pointsNoDuplicate[2]); 
+			for (int i = 3; i < pointsNoDuplicate.length; i++){ 
+				comp =  new PolarAngleComparator(tempfirstpoint, true);
+				
+				while(comp.compare(pointsNoDuplicate[i], vertexStack.peek()) == -1) {
+					vertexStack.pop();
+										
+					Point temp = new Point(vertexStack.pop());
+					tempfirstpoint = new Point(vertexStack.peek());
+					vertexStack.push(temp);	
+					comp =  new PolarAngleComparator(tempfirstpoint, true);
+				}
+				
+				tempfirstpoint = new Point(vertexStack.peek());
+				
+				vertexStack.push(pointsNoDuplicate[i]);
+				
+			}
+			hullVertices = new Point[vertexStack.size()];
+			int i = vertexStack.size() -1;
+			while(!vertexStack.isEmpty()){
+				hullVertices[i]= vertexStack.pop();
+				i--;
+			}
+		}
+		stoptime = System.nanoTime();
+		this.time = stoptime- starttime;
 	}
 	
 	
@@ -84,6 +135,9 @@ public class GrahamScan extends ConvexHull
 	 */
 	public void setUpScan()
 	{
-		// TODO 
+		Comparator<Point> comp =  new PolarAngleComparator(lowestPoint, true);
+		quicksorter = new QuickSortPoints(pointsNoDuplicate);
+		quicksorter.quickSort(comp);
+		quicksorter.getSortedPoints(pointsNoDuplicate);
 	}	
 }

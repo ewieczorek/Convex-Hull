@@ -1,7 +1,14 @@
 package edu.iastate.cs228.hw4;
 
+/**
+ *  
+ * @author Ethan Wieczorek
+ *
+ */
+
 import java.util.Arrays;
 import java.util.Comparator;
+
 
 /**
  * This class sorts an array of Point objects using a provided Comparator.  You may 
@@ -20,7 +27,13 @@ public class QuickSortPoints
 	 */
 	QuickSortPoints(Point[] pts)
 	{
-		// ToDo 
+		points = new Point[pts.length];
+		for (int i = pts.length - 1; i >= 0; --i) {
+		    Point p = pts[i];
+		    if (p != null) { 
+		        points[i] = new Point(p);
+		    }
+		}
 	}
 	
 	
@@ -31,7 +44,12 @@ public class QuickSortPoints
 	 */
 	void getSortedPoints(Point[] pts)
 	{
-		// ToDo 
+		for (int i = points.length - 1; i >= 0; --i) {
+		    Point p = points[i];
+		    if (p != null) { 
+		        pts[i] = new Point(p);
+		    }
+		}
 	}
 
 	
@@ -43,7 +61,7 @@ public class QuickSortPoints
 	 */
 	public void quickSort(Comparator<Point> comp)
 	{
-		// TODO 
+		this.quickSortRec(0, (points.length - 1), comp);
 	}
 	
 	
@@ -55,7 +73,19 @@ public class QuickSortPoints
 	 */
 	private void quickSortRec(int first, int last, Comparator<Point> comp)
 	{
-		// TODO 
+		if (last - first >= 1){                   
+			if (first < last) {
+				int i = this.partition(first, last, comp);
+				if(i > 0){
+					this.quickSortRec(first, i - 1, comp);
+				}
+				if(i < (last - 1)){
+					this.quickSortRec(i + 1, last, comp);
+				}
+			}
+		} else {
+	            return;                     
+	    }
 	}
 	
 
@@ -68,9 +98,27 @@ public class QuickSortPoints
 	 */
 	private int partition(int first, int last, Comparator<Point> comp)
 	{
-		return 0; 
-		// TODO
+		int i = first;
+        int j = last;
+
+        Point pivot = points[first];
+
+        while (j > i)
+        {
+                while (comp.compare(points[i], pivot) < 1 && i <= last && j > i)  
+                	i++; 
+                while (comp.compare(points[j], pivot) == 1 && j >= first && j >= i) 
+                    j--;
+                if (j > i) {
+                	Point temp = points[i];
+        			points[i] = points[j];
+        			points[j] = temp;
+                }
+        }
+        Point temp = points[first];
+		points[first] = points[j];
+		points[j] = temp;
+        return j;
 	}
 }
-
 

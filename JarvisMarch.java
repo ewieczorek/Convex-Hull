@@ -1,6 +1,13 @@
 package edu.iastate.cs228.hw4;
 
+/**
+ *  
+ * @author Ethan Wieczorek
+ *
+ */
+
 import java.io.FileNotFoundException;
+import java.util.Comparator;
 import java.util.InputMismatchException;
 import java.util.ArrayList; 
 
@@ -27,7 +34,10 @@ public class JarvisMarch extends ConvexHull
 	public JarvisMarch(Point[] pts) throws IllegalArgumentException 
 	{
 		super(pts); 
-		// TODO 
+		algorithm = "Jarvis March";
+		leftChain = new ArrayBasedStack<Point>();
+		rightChain = new ArrayBasedStack<Point>();
+		highestPoint = pointsNoDuplicate[pointsNoDuplicate.length - 1];
 	}
 
 	
@@ -42,7 +52,14 @@ public class JarvisMarch extends ConvexHull
 	public JarvisMarch(String inputFileName) throws FileNotFoundException, InputMismatchException
 	{
 		super(inputFileName); 
-		// TODO 
+		try{
+			algorithm = "Jarvis March";
+			leftChain = new ArrayBasedStack<Point>();
+			rightChain = new ArrayBasedStack<Point>();
+			highestPoint = pointsNoDuplicate[pointsNoDuplicate.length - 1];
+		}catch (NullPointerException e1){
+			//if file is not found this will give null pointer exception and i'm just trying to avoid that
+		}
 	}
 
 
@@ -64,7 +81,35 @@ public class JarvisMarch extends ConvexHull
 	 */
 	public void constructHull()
 	{
-		// TODO
+		long starttime = 0;
+		long stoptime = 0;
+		starttime = System.nanoTime();
+		if(pointsNoDuplicate.length == 1){
+			hullVertices = new Point[1];
+			hullVertices[0] = new Point(pointsNoDuplicate[0]);
+		}else if(pointsNoDuplicate.length == 2){
+			hullVertices = new Point[2];
+			hullVertices[0] = new Point(pointsNoDuplicate[0]);
+			hullVertices[1] = new Point(pointsNoDuplicate[1]);
+		}else{
+			createRightChain();
+			createLeftChain();
+			hullVertices = new Point[leftChain.size() + rightChain.size() - 2];
+			int i = hullVertices.length - 1;
+			hullVertices[0] = leftChain.pop();
+			while(!leftChain.isEmpty()){
+				hullVertices[i]= leftChain.pop();
+				i--;
+			}
+			rightChain.pop();
+			while(rightChain.size() > 1){
+				hullVertices[i]= rightChain.pop();
+				i--;
+			}
+			
+		}
+		stoptime = System.nanoTime();
+		this.time = stoptime- starttime;
 	}
 	
 	
@@ -80,7 +125,10 @@ public class JarvisMarch extends ConvexHull
 	 */
 	public void createRightChain()
 	{
-		// TODO 
+		rightChain.push(pointsNoDuplicate[0]); //starts at lowest point
+		while(rightChain.peek().compareTo(highestPoint) != 0){ //goes until it hits highest point
+			rightChain.push(nextVertex(rightChain.peek()));
+		}
 	}
 	
 	
@@ -94,7 +142,10 @@ public class JarvisMarch extends ConvexHull
 	 */
 	public void createLeftChain()
 	{
-		// TODO 
+		leftChain.push(highestPoint); //starts at highest point
+		while(leftChain.peek().compareTo(lowestPoint) != 0 ){ //goes until it hits lowest point
+			leftChain.push(nextVertex(leftChain.peek()));
+		}
 	}
 	
 	
@@ -111,6 +162,11 @@ public class JarvisMarch extends ConvexHull
 	 */
 	public Point nextVertex(Point v)
 	{
-		return null; 
+		Comparator<Point> comp =  new PolarAngleComparator(v, false);
+		Point temp = new Point(pointsNoDuplicate[0]);
+		for(int i = 1; i < pointsNoDuplicate.length; i++){
+			if(comp.compare(pointsNoDuplicate[i], temp) == -1) temp = new Point(pointsNoDuplicate[i]);
+		}
+		return temp;
 	}
 }

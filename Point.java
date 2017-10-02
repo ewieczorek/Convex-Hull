@@ -1,10 +1,10 @@
  package edu.iastate.cs228.hw4;
 
-/**
- *  
- * @author
- *
- */
+ /**
+  *  
+  * @author Ethan Wieczorek
+  *
+  */
 
 public class Point implements Comparable<Point>
 {
@@ -61,8 +61,18 @@ public class Point implements Comparable<Point>
 	 */
 	public int compareTo(Point q)
 	{
-		return 0; 
-		// TODO; 
+		try{
+			if (this.y < q.y || (this.y == q.y && this.x < q.x)){
+				return -1;
+			}else if (this.y == q.y && this.x == q.x){
+				return 0;
+			}
+        }
+        catch(NullPointerException e)
+        {
+            return 1;
+        }
+		return 1;
 	}
 	
 	
@@ -72,7 +82,6 @@ public class Point implements Comparable<Point>
 	@Override
     public String toString() 
 	{
-		// TODO 
-		return null; 
+		return "(" + this.x + ", " + this.y + ")";
 	}
 }

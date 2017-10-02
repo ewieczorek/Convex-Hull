@@ -2,11 +2,13 @@ package edu.iastate.cs228.hw4;
 
 /**
  *  
- * @author
+ * @author Ethan Wieczorek
  *
  */
 
 import java.util.Comparator;
+
+
 
 /**
  * 
@@ -25,7 +27,7 @@ public class PolarAngleComparator implements Comparator<Point>
 	 */
 	public PolarAngleComparator(Point p, boolean flag)
 	{
-		referencePoint = p; 
+		this.referencePoint = p; 
 		this.flag = flag; 
 	}
 	
@@ -51,8 +53,30 @@ public class PolarAngleComparator implements Comparator<Point>
 	 */
 	public int compare(Point p1, Point p2)
 	{
-		// TODO
-		return 0; 
+    	if(p1 == null || p2 == null){ //null check
+    		return 1;
+    	}
+    	//this gets the points compared to the reference point
+		Point p1new = new Point(p1.getX() - this.referencePoint.getX(), p1.getY() - this.referencePoint.getY());
+		Point p2new = new Point(p2.getX() - this.referencePoint.getX(), p2.getY() - this.referencePoint.getY());
+		
+		int length1 =  dotProduct(p1new, p1new);
+		int length2 =  dotProduct(p2new, p2new);
+
+    	if(crossProduct(p1new, p2new) == 0) {
+    		if (length1 == length2) {
+    			return 0;
+    		} else if (length1 < length2 && flag == true) {
+    			return -1;
+    		} else if (length2 < length1 && flag == false) {
+    			return -1;
+    		}
+    	} else if(crossProduct(p1new, p2new) > 0) {
+    		return -1;
+    	}
+    	//else
+    	return 1;
+    	
 	}
 	    
 
@@ -64,8 +88,7 @@ public class PolarAngleComparator implements Comparator<Point>
      */
     private int crossProduct(Point p1, Point p2)
     {
-    	// TODO 
-    	return 0; 
+    	return ((p1.getX()*p2.getY())-(p1.getY()*p2.getX()));
     }
 
     /**
@@ -76,7 +99,6 @@ public class PolarAngleComparator implements Comparator<Point>
      */
     private int dotProduct(Point p1, Point p2)
     {
-    	// TODO 
-    	return 0; 
+    	return ((p1.getX()*p2.getX())+(p1.getY()*p2.getY()));
     }
 }

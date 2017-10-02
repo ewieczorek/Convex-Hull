@@ -32,7 +32,8 @@ public class ArrayBasedStack<E> implements PureStack<E>
   /**
    * Constructs an empty stack.
    */
-  public ArrayBasedStack()
+  @SuppressWarnings("unchecked")
+public ArrayBasedStack()
   {
     // Unchecked warning is unavoidable
     data = (E[]) new Object[DEFAULT_SIZE];

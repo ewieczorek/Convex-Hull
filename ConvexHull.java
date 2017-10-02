@@ -2,18 +2,36 @@ package edu.iastate.cs228.hw4;
 
 /**
  *  
- * @author
+ * @author Ethan Wieczorek
  *
  */
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException; 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.InputMismatchException; 
 import java.io.PrintWriter;
 import java.util.Random; 
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
+
+
 
 
 
@@ -85,7 +103,16 @@ public abstract class ConvexHull
 	 */
 	public ConvexHull(Point[] pts) throws IllegalArgumentException 
 	{
-		// TODO 
+		points = new Point[pts.length]; //1) Store the points in the private array points[].
+		for (int i = pts.length - 1; i >= 0; --i) {
+		    Point p = pts[i];
+		    if (p != null) { 
+		        points[i] = new Point(p);
+		    }
+		}
+		quicksorter = new QuickSortPoints(points); //2) Initialize quicksorter. 
+		this.removeDuplicates(); //3) Call removeDuplicates() to store distinct points from the input in pointsNoDuplicate[].
+		lowestPoint = pointsNoDuplicate[0]; //4) Set lowestPoint to pointsNoDuplicate[0].
 	}
 	
 	/**
@@ -105,7 +132,55 @@ public abstract class ConvexHull
 	 */
 	public ConvexHull(String inputFileName) throws FileNotFoundException, InputMismatchException
 	{
-		// TODO 
+		try{ //this is 100% exactly copied from my project 2
+			BufferedReader lineReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFileName)));
+			List<Integer> temp = new ArrayList<Integer>();
+			Pattern p = Pattern.compile("(-?)(\\d+)\\s?");
+			String widthLine = "";
+			try{
+			while (!(widthLine = lineReader.readLine()).isEmpty()){
+				Matcher m = p.matcher(widthLine); 
+				while (m.find()) {					
+					if(!m.group(1).isEmpty()){
+						if(!m.group(2).isEmpty()){
+							temp.add(Integer.parseInt(m.group(2))*-1);
+						}
+					}else if(m.group(1).isEmpty()){
+						if(!m.group(2).isEmpty()){
+							temp.add((!m.group(2).isEmpty()) ? Integer.parseInt(m.group(2)) : null);
+						}
+					}
+				}
+			}
+			}catch(NullPointerException n1){
+				
+			}
+			lineReader.close();
+			
+			if(temp.size() %2 != 0) {InputMismatchException e1 = new InputMismatchException(); System.out.println(e1.getMessage());}
+			
+			this.points = new Point[temp.size()/2];
+			int j = 0;
+			for(int i = 0; i < temp.size() - 1; i++){
+				this.points[j] = new Point(temp.get(i), temp.get(i+1));
+				i++;
+				j++;
+				
+			}
+			this.lowestPoint = new Point(50,50);
+			for( int i = 0; i < points.length; i++){
+				if(points[i].getY() < this.lowestPoint.getY()) this.lowestPoint = points[i];
+				if(points[i].getY() == this.lowestPoint.getY() && points[i].getX() < this.lowestPoint.getX()) this.lowestPoint = points[i];
+			}
+			quicksorter = new QuickSortPoints(points);
+			removeDuplicates();
+			lowestPoint = pointsNoDuplicate[0];
+			
+		} catch (FileNotFoundException ex) {
+		    System.out.println("File Not Found");
+		} catch (IOException ex2) {
+			System.out.println("IO Exception");
+		}
 	}
 
 	
@@ -129,8 +204,7 @@ public abstract class ConvexHull
 	 */
 	public String stats()
 	{
-		return null; 
-		// TODO 
+		return String.format("%-15s %10d %10d", algorithm, points.length, time); //<convex hull algorithm> <size>  <time> formatted correctly
 	}
 	
 	
@@ -148,8 +222,17 @@ public abstract class ConvexHull
 	 */
 	public String toString()
 	{
-		// TODO 
-		return null; 
+		String temp = "";
+		int width = 0;
+		for(int i = 0; i < hullVertices.length; i++){//The string displays the convex hull with vertices in counterclockwise order starting at lowestPoint
+			temp += hullVertices[i].toString() + "   "; //with three blanks in between
+			width++;
+			if(width == 5){ //When printed out, it will list five points per line 
+				temp += "\n";
+				width = 0;
+			}
+		}
+		return temp;
 	}
 	
 	
@@ -178,7 +261,18 @@ public abstract class ConvexHull
 	 */
 	public void writeHullToFile() throws IllegalStateException 
 	{
-		// TODO 
+		 try{
+			 BufferedWriter output = null;
+			 output = new BufferedWriter(new FileWriter("hull.txt"));
+			 for(int i = 0; i < hullVertices.length; i++){
+				 output.write(hullVertices[i].toString() + "\n");
+			 }
+			 output.close();
+		 }catch(FileNotFoundException e1){
+			 System.out.println("Output File Not Found");
+		 }catch(IOException e2){
+			 
+		 }
 	}
 	
 
@@ -189,16 +283,18 @@ public abstract class ConvexHull
 	 */
 	public void draw()
 	{		
-		int numSegs = 0;  // number of segments to draw 
+		int numSegs = hullVertices.length;  // number of segments to draw 
 
 		// Based on Section 4.1, generate the line segments to draw for display of the convex hull.
 		// Assign their number to numSegs, and store them in segments[] in the order. 
-		Segment[] segments = new Segment[numSegs]; 
+		Segment[] segments = new Segment[numSegs];  
 		
-		// TODO 
-		
+		for(int j = 1; j < hullVertices.length; j++){
+			segments[j-1] = new Segment(hullVertices[j-1], hullVertices[j]);
+		}
+		//the following adds a segment between the last point and the first point, which was not included in the loop. It stores this in the final spot of hullVertices[]
+		segments[hullVertices.length-1] = new Segment(hullVertices[hullVertices.length-1], hullVertices[0]);
 
-		
 		// The following statement creates a window to display the convex hull.
 		Plot.myFrame(pointsNoDuplicate, segments, getClass().getName());
 		
@@ -214,6 +310,48 @@ public abstract class ConvexHull
 	 */
 	public void removeDuplicates()
 	{
-		// TODO 
+		Comparator<Point> comp = new Comparator<Point>() {
+			public int compare(Point p1, Point p2) {
+				return p1.compareTo(p2);
+			}
+		};
+		
+		quicksorter.quickSort(comp);
+		Point[] pointsWithDuplicates = new Point[points.length]; 
+		quicksorter.getSortedPoints(pointsWithDuplicates);
+		int newLength = 1;
+		
+		for(int i = 1; i < pointsWithDuplicates.length; i++){
+			if(pointsWithDuplicates[i].compareTo(pointsWithDuplicates[i-1]) != 0){
+				newLength++;
+			}
+		}
+		pointsNoDuplicate = new Point[newLength];
+		int iter = 1;
+		pointsNoDuplicate[0] = new Point(pointsWithDuplicates[0]);
+		for(int i = 1; i < pointsWithDuplicates.length; i++){
+			if(pointsWithDuplicates[i].compareTo(pointsWithDuplicates[i-1]) != 0){
+				pointsNoDuplicate[iter] = new Point(pointsWithDuplicates[i]);
+				iter++;
+			}
+		}
+		
+		/*
+		// I really just wanted to see if this was possible but i couldn't quite get it to work.
+		// It sometimes didn't retain the order for some reason.
+		ArrayList<Point> templist = new ArrayList<Point>();
+		for(int i = 1; i < pointsWithDuplicates.length; i++){
+			templist.add(pointsWithDuplicates[i]);
+		}
+		Set<Point> pointset = new LinkedHashSet<Point>(templist);
+		templist.clear();
+		templist.addAll(pointset);	
+		
+		pointsNoDuplicate = new Point[templist.size()];
+		Iterator<Point> iter = templist.iterator();
+		for(int i =0; i < templist.size(); i++){
+			pointsNoDuplicate[i] = new Point(iter.next());
+		}
+	*/
 	}
 }
